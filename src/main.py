@@ -4,6 +4,7 @@ import numpy as np
 import uuid #to generate unique unifrom id => random string for image name? (for no overlap)
 import os
 import time
+import random
 
 def count_fingers(hand_landmarks):
     
@@ -84,10 +85,8 @@ def video_counter():
 
     return finger_count
 
-    
-
 def game():
-    
+
     score = 0
 
     for i in range(3):
@@ -96,10 +95,20 @@ def game():
         print("press q to register your input")
         #time.sleep(1)
         current = video_counter()
-        score+=current
+        cpu_move = random.randint(1,6)
+
+        print("your input :", current)
+        print("cpu input :", cpu_move)
+
+        if current == cpu_move:
+            is_out = True
+            print("youre out!!")
+            return score, cpu_move
+        else:
+            score+=current
         
     
-    return score
+    return score, cpu_move
 
 def main():
     print("Your score is :",game())
