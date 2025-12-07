@@ -3,6 +3,7 @@ import cv2
 import numpy as np  
 import uuid #to generate unique unifrom id => random string for image name? (for no overlap)
 import os
+import time
 
 def count_fingers(hand_landmarks):
     
@@ -28,49 +29,77 @@ def count_fingers(hand_landmarks):
 
     return sum(fingers) #number of fingers up
 
-mp_drawing = mp.solutions.drawing_utils
-mp_hands = mp.solutions.hands #that hand diagram
+def video_counter():
 
-#each red mark in the hand is a land mark
+    mp_drawing = mp.solutions.drawing_utils
+    mp_hands = mp.solutions.hands #that hand diagram
 
-cap = cv2.VideoCapture(0) #webcam feed (video device number 0)
+    #each red mark in the hand is a land mark
 
-with mp_hands.Hands(min_detection_confidence = 0.8, min_tracking_confidence=0.5) as hands: #first detection confidence, trackign detection confidence
+    cap = cv2.VideoCapture(0) #webcam feed (video device number 0)
 
-    while cap.isOpened():
-        ret, frame = cap.read() #ret is return value, not really needed, the frame is needed
+    with mp_hands.Hands(min_detection_confidence = 0.8, min_tracking_confidence=0.5) as hands: #first detection confidence, trackign detection confidence
 
-        #detection
-        image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB) #converting bgr to rgb (cuz mediapipe needs rgb)
+        while cap.isOpened():
+            ret, frame = cap.read() #ret is return value, not really needed, the frame is needed
 
-        #set flag
-        image.flags.writeable = False
+            #detection
+            image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB) #converting bgr to rgb (cuz mediapipe needs rgb)
 
-        results = hands.process(image) #actual detection happening here
+            #set flag
+            image.flags.writeable = False
 
-        #set flag back to True
-        image.flags.writeable = True
+            results = hands.process(image) #actual detection happening here
 
-        image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+            #set flag back to True
+            image.flags.writeable = True
 
-        #print(results)
+            image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
 
-        #rendering results 
-        if results.multi_hand_landmarks: #if we actually got some results
-            for num, hand in enumerate(results.multi_hand_landmarks):
+            finger_count = 0
 
-                finger_count = count_fingers(hand)
-                print("Number of Fingers Up : ", finger_count)
+            #print(results)
 
-                mp_drawing.draw_landmarks(image, hand, mp_hands.HAND_CONNECTIONS)
+            #rendering results 
+            if results.multi_hand_landmarks: #if we actually got some results
 
-        #cv2.imshow('Video Feed', frame) #frame is raw webcam feed, but we need with joints
-        cv2.imshow('Video Feed', image)
-
-        if cv2.waitKey(10) & 0XFF == ord('q'):
-            break
-
-cap.release()
-cv2.destroyAllWindows()
+                for num, hand in enumerate(results.multi_hand_landmarks):
+                    
+                    mp_drawing.draw_landmarks(image, hand, mp_hands.HAND_CONNECTIONS)
+                    finger_count = count_fingers(hand)
+                    
+            #cv2.imshow('Video Feed', frame) #frame is raw webcam feed, but we need with joints
+            cv2.imshow('Video Feed', image)
 
 
+
+            if cv2.waitKey(10) & 0XFF == ord('q'):
+                return finger_count
+                break
+    
+    
+
+    cap.release()
+    cv2.destroyAllWindows()
+
+    
+
+def game():
+    
+    score = 0
+
+    for i in range(3):
+        
+        #print("waiting 1 second")
+        print("press q to register your input")
+        #time.sleep(1)
+        current = video_counter()
+        score+=current
+        
+    
+    return score
+
+def main():
+    print("Your score is :",game())
+
+main()
