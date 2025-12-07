@@ -74,13 +74,15 @@ def video_counter():
 
 
             if cv2.waitKey(10) & 0XFF == ord('q'):
-                return finger_count
+                done = True
                 break
     
     
 
     cap.release()
     cv2.destroyAllWindows()
+
+    return finger_count
 
     
 
@@ -102,4 +104,5 @@ def game():
 def main():
     print("Your score is :",game())
 
-main()
+if __name__ == "__main__":
+    main() 
