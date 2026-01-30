@@ -7,7 +7,10 @@ import time
 import random
 import threading
 import customtkinter as ctk
-from PIL import Image, ImageTk
+
+'''
+    polish gui with frames later
+'''
 
 
 class GAME_GUI:
@@ -21,14 +24,27 @@ class GAME_GUI:
 
         self.start_cam_thread()
 
+        self.user_inp = ctk.CTkLabel(self.root, text="", font=("Helvetica", 40))
+        self.user_inp.pack(padx=10, pady=10)
+
+        self.comp_inp = ctk.CTkLabel(self.root, text="", font=("Helvetica", 40))
+        self.comp_inp.pack(padx=10, pady=10)
+
+        self.out_check = ctk.CTkLabel(self.root, text="", font=("Helvetica", 40))
+        self.out_check.pack(padx=10, pady=10)
+
         self.score_label = ctk.CTkLabel(self.root, text="", font=("Helvetica", 40))
         self.score_label.pack(padx=10, pady=10)
+
+        
+
+        
         
         
         self.root.mainloop()
 
     def update_score_label(self, score):
-        self.score_label.configure(text=f"{score}")
+        self.score_label.configure(text=f"Your score is : {score}")
 
     def start_cam_thread(self):
         threading.Thread(target=self.game, daemon=True).start()  
@@ -51,7 +67,7 @@ class GAME_GUI:
 
         #for thumb
         if hand_landmarks.landmark[4].x > hand_landmarks.landmark[3].x:
-            fingers.append(1)
+            fingers.append(6)
         else:
             fingers.append(0)
 
@@ -114,32 +130,39 @@ class GAME_GUI:
 
     def game(self):
 
-        score = 0
-
+        self.score = 0
+        self.is_out = False
 
         while(True):    
             #print("waiting 1 second")
             print("press q to register your input")
                 #time.sleep(1)
-            current = self.video_counter()
-            cpu_move = random.randint(1,6)
+            self.current = self.video_counter()
+            self.cpu_move = random.randint(1,6)
 
-            print("your input :", current)
-            print("cpu input :", cpu_move)
+            print("your input :", self.current)
+            print("cpu input :", self.cpu_move)
 
+            self.user_inp.configure(text=f"Your Input : {self.current}")
+            self.comp_inp.configure(text=f"Computer Input : {self.cpu_move}")
 
             print("update score label call check")
 
-            if current == cpu_move:
-                is_out = True
-                print("youre out!!")
-                return score, cpu_move
-            else:
-                score+=current
-                
-            self.root.after(0, self.update_score_label, score) #run func in main thread
+            if self.current == self.cpu_move:
+                self.is_out = True
 
-        print(f"your final score : {score}")
+                if self.is_out:
+                    self.out_check.configure(text="You are Out!")
+
+                print("youre out!!")
+                print(f"your final score : {self.score}")
+                return self.score, self.cpu_move
+            else:
+                self.score+=self.current
+                
+            self.root.after(0, self.update_score_label, self.score) #run func in main thread
+
+        print(f"your final score : {self.score}")
             
         
         
