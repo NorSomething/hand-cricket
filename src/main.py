@@ -5,6 +5,7 @@ import uuid #to generate unique unifrom id => random string for image name? (for
 import os
 import time
 import random
+import threading
 import customtkinter as ctk
 from PIL import Image, ImageTk
 
@@ -18,30 +19,19 @@ class GAME_GUI:
         self.root.geometry('800x600')
         self.root.title('Hand Cricket')
 
-        # self.camera_label = ctk.CTkLabel(self.root)
-        # self.camera_label.pack(padx=20, pady=20)
+        self.start_cam_thread()
 
-    
-
-        # self.show_cv_inframe()
-
-        self.video_counter()
-
-        # self.show_cv_inframe()
-
-
+        self.score_label = ctk.CTkLabel(self.root, text="", font=("Helvetica", 40))
+        self.score_label.pack(padx=10, pady=10)
+        
+        
         self.root.mainloop()
 
-    # def show_cv_inframe(self):
-    #     #get frame and convert to image
+    def update_score_label(self, score):
+        self.score_label.configure(text=f"{score}")
 
-    #     cv2image = cv2.cvtColor(self.cap.read()[1], cv2.COLOR_BGR2RGB)
-    #     img = Image.fromarray(cv2image)
-
-    #     imgtk = ImageTk.PhotoImage(image = img)
-    #     self.camera_label.imgtk = imgtk
-    #     self.camera_label.configure(image = imgtk)
-
+    def start_cam_thread(self):
+        threading.Thread(target=self.game, daemon=True).start()  
 
     def count_fingers(self, hand_landmarks):
         
@@ -74,12 +64,12 @@ class GAME_GUI:
 
         #each red mark in the hand is a land mark
 
-        self.cap = cv2.VideoCapture(0) #webcam feed (video device number 0)
+        cap = cv2.VideoCapture(0) #webcam feed (video device number 0)
 
         with mp_hands.Hands(min_detection_confidence = 0.8, min_tracking_confidence=0.5) as hands: #first detection confidence, trackign detection confidence
 
-            while self.cap.isOpened():
-                ret, frame = self.cap.read() #ret is return value, not really needed, the frame is needed
+            while cap.isOpened():
+                ret, frame = cap.read() #ret is return value, not really needed, the frame is needed
 
                 #detection
                 image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB) #converting bgr to rgb (cuz mediapipe needs rgb)
@@ -117,7 +107,7 @@ class GAME_GUI:
         
         
 
-        self.cap.release()
+        cap.release()
         cv2.destroyAllWindows()
 
         return finger_count
@@ -126,16 +116,19 @@ class GAME_GUI:
 
         score = 0
 
-        for _ in range(3):
-            
+
+        while(True):    
             #print("waiting 1 second")
             print("press q to register your input")
-            #time.sleep(1)
-            current = video_counter()
+                #time.sleep(1)
+            current = self.video_counter()
             cpu_move = random.randint(1,6)
 
             print("your input :", current)
             print("cpu input :", cpu_move)
+
+
+            print("update score label call check")
 
             if current == cpu_move:
                 is_out = True
@@ -143,11 +136,20 @@ class GAME_GUI:
                 return score, cpu_move
             else:
                 score+=current
+                
+            self.root.after(0, self.update_score_label, score) #run func in main thread
+
+        print(f"your final score : {score}")
             
         
-        return score, cpu_move
+        
+
+    def main():
+        print("Your score is :",game())
+
 
 
 
 if __name__ == "__main__":
     GAME_GUI()
+        
